@@ -91,8 +91,18 @@ def broadcast_index(
 
     """
     # TODO: Implement for Task 2.2.
+    # Ensure shape alignment by padding shape with leading ones
+    dim_offset = len(big_shape) - len(shape)
+    padded_shape = (1,) * dim_offset + shape  # Adjust shape with leading ones
 
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # Iterate over each dimension
+    for i in range(len(big_shape)):
+        if padded_shape[i] == 1:
+            # If the current smaller shape dimension is 1, we set out_index to 0
+            out_index[i - dim_offset] = 0
+        else:
+            # Otherwise, copy the corresponding index from the big_index
+            out_index[i - dim_offset] = big_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -110,7 +120,18 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
 
     """
     # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # Ensure both shapes are the same length by padding with leading ones
+    max_len = max(len(shape1), len(shape2))
+    shape1 = (1,) * (max_len - len(shape1)) + shape1
+    shape2 = (1,) * (max_len - len(shape2)) + shape2
+
+    # Broadcast the shapes
+    broadcast_shape = []
+    for i in range(max_len):
+        if shape1[i] != shape2[i] and shape1[i] != 1 and shape2[i] != 1:
+            raise IndexingError("Cannot broadcast between shapes")
+        broadcast_shape.append(max(shape1[i], shape2[i]))
+    return tuple(broadcast_shape)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
