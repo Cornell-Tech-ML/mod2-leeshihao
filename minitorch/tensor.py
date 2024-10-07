@@ -13,23 +13,23 @@ from .tensor_data import TensorData
 
 # Comment these out if not yet implemented
 from .tensor_functions import (
-    EQ,
-    LT,
-    Add,
-    All,
-    Copy,
-    Exp,
-    Inv,
-    IsClose,
-    Log,
-    MatMul,
-    Mul,
-    Neg,
-    Permute,
-    ReLU,
-    Sigmoid,
-    Sum,
-    View,
+    # EQ,
+    # LT,
+    # Add,
+    # All,
+    # Copy,
+    # Exp,
+    # Inv,
+    # IsClose,
+    # Log,
+    # MatMul,
+    # Mul,
+    # Neg,
+    # Permute,
+    # ReLU,
+    # Sigmoid,
+    # Sum,
+    # View,
     tensor,
 )
 
@@ -95,9 +95,11 @@ class Tensor:
         self.f = backend
 
     def requires_grad_(self, x: bool) -> None:
+        """Sets whether to require gradient for this Tensor."""
         self.history = History()
 
     def requires_grad(self) -> bool:
+        """Returns whether to require gradient for this Tensor."""
         return self.history is not None
 
     def to_numpy(self) -> npt.NDArray[np.float64]:
@@ -194,6 +196,7 @@ class Tensor:
         # END CODE CHANGE (2021)
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
+        """Produce a zero tensor of size `shape`."""
         def zero(shape: UserShape) -> Tensor:
             return Tensor.make(
                 [0.0] * int(operators.prod(shape)), shape, backend=self.backend
@@ -239,14 +242,17 @@ class Tensor:
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """True if this variable is a constant (created by the user)."""
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
+        """The immediate parents of this variable, in the computation graph."""
         assert self.history is not None
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """Computes the derivatives of this node with respect to each leaf variable"""
         h = self.history
         assert h is not None
         assert h.last_fn is not None
@@ -260,6 +266,7 @@ class Tensor:
         ]
 
     def backward(self, grad_output: Optional[Tensor] = None) -> None:
+        """Backpropagate the gradient to the leaves."""
         if grad_output is None:
             assert self.shape == (1,), "Must provide grad_output if non-scalar"
             grad_output = Tensor.make([1.0], (1,), backend=self.backend)
