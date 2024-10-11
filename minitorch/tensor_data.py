@@ -93,16 +93,16 @@ def broadcast_index(
     # TODO: Implement for Task 2.2.
     # Ensure shape alignment by padding shape with leading ones
     dim_offset = len(big_shape) - len(shape)
-    padded_shape = (1,) * dim_offset + shape  # Adjust shape with leading ones
+    padded_shape = np.concatenate([np.ones(dim_offset, dtype=int), shape])  # Adjust shape with leading ones
 
     # Iterate over each dimension
-    for i in range(len(big_shape)):
+    for i in range(dim_offset, len(big_shape)):
         if padded_shape[i] == 1:
             # If the current smaller shape dimension is 1, we set out_index to 0
-            out_index[i - dim_offset] = 0
+            out_index[i-dim_offset] = 0
         else:
             # Otherwise, copy the corresponding index from the big_index
-            out_index[i - dim_offset] = big_index[i]
+            out_index[i-dim_offset] = big_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:

@@ -41,7 +41,9 @@ class TensorOps:
     @staticmethod
     def reduce(
         fn: Callable[[float, float], float], start: float = 0.0
-    ) -> Callable[[Tensor, int], Tensor]: ...
+    ) -> Callable[[Tensor, int], Tensor]:
+        """Reduce placeholder"""
+        ...
 
     @staticmethod
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
@@ -196,6 +198,7 @@ class SimpleOps(TensorOps):
             fn: function from two floats-to-float to apply
             a (:class:`TensorData`): tensor to reduce over
             dim (int): int of dim to reduce
+            start (float): starting value
 
         Returns:
             :class:`TensorData` : new tensor
@@ -262,7 +265,29 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Compute the size of the `out` tensor (total number of elements)
+        out_size = 1
+        for dim in out_shape:
+            out_size *= dim
+
+        # Initialize the out_index and in_index arrays
+        out_index = [0] * len(out_shape)
+        in_index = [0] * len(in_shape)
+
+        # Iterate over all positions in the `out` tensor
+        for ordinal in range(out_size):
+            # Convert ordinal (linear position) to the multidimensional `out_index`
+            to_index(ordinal, out_shape, out_index)
+            
+            # Broadcast `out_index` to `in_index`
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            
+            # Convert `out_index` and `in_index` to positions in the respective storage arrays
+            out_pos = index_to_position(out_index, out_strides)
+            in_pos = index_to_position(in_index, in_strides)
+            
+            # Apply the function and store the result in the `out` array
+            out[out_pos] = fn(in_storage[in_pos])
 
     return _map
 
@@ -307,7 +332,37 @@ def tensor_zip(
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Compute the size of the `out` tensor (total number of elements)
+        out_size = out.size
+        # for dim in out_shape:
+        #     out_size *= dim
+
+        # Initialize the out_index and in_index arrays
+        out_index = [0] * len(out_shape)
+        a_index = [0] * len(a_shape)
+        b_index = [0] * len(b_shape)
+
+        # print("zip test: storage", out, a_storage, b_storage)
+        # Iterate over all positions in the `out` tensor
+        for i in range(out_size):
+            # print("i:", i)
+            # Convert ordinal (linear position) to the multidimensional `out_index`
+            to_index(i, out_shape, out_index)
+            # print("out_index:", out_index, "out_shape:", out_shape)
+            # Broadcast `out_index` to `a/b_index`
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            # print("a_index:", a_index, "a_shape:", a_shape)
+            # print("b_index:", b_index, "b_shape:", b_shape)
+            # Convert indices to positions in the respective storage arrays
+            out_pos = index_to_position(out_index, out_strides)
+            a_pos = index_to_position(a_index, a_strides)
+            b_pos = index_to_position(b_index, b_strides)
+            # print("out_pos:", out_pos, "a_pos:", a_pos, "b_pos:", b_pos)
+
+            # Apply the function and store the result in the `out` array
+            # print("zip test:", i, out_pos, a_pos, b_pos, out[out_pos], a_storage[a_pos], b_storage[b_pos])
+            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip
 
@@ -338,7 +393,34 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+                # Compute the size of the `out` tensor (total number of elements)
+        out_size = out.size
+        # for dim in out_shape:
+        #     out_size *= dim
+
+        # Initialize the out_index and in_index arrays
+        out_index = [0] * len(out_shape)
+        a_index = [0] * len(a_shape)
+
+        # Iterate over all positions in the `out` tensor
+        for ordinal in range(out_size):
+            # Convert ordinal (linear position) to the multidimensional `out_index`
+            to_index(ordinal, out_shape, out_index)
+            
+            # Copy `out_index` into `a_index` for all dimensions except `reduce_dim`
+            for i in range(len(out_index)):
+                a_index[i] = out_index[i]
+            a_index[reduce_dim] = 0
+
+            # Iterate over the `reduce_dim` and apply the reduction function `fn`
+            result = a_storage[index_to_position(a_index, a_strides)]
+            for i in range(1, a_shape[reduce_dim]):
+                a_index[reduce_dim] = i
+                result = fn(result, a_storage[index_to_position(a_index, a_strides)])
+
+            # Store the reduced result in `out`
+            out_pos = index_to_position(out_index, out_strides)
+            out[out_pos] = result
 
     return _reduce
 
