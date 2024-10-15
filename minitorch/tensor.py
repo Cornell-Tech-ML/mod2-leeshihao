@@ -330,45 +330,55 @@ class Tensor:
         return Mul.apply(self._ensure_tensor(b), self)
     
     def all(self, dim: TensorLike = None) -> Tensor:
+        """Return 1 if all are true along a given dimension"""
         if dim is None:
             return All.apply(self)
         else:
             return All.apply(self, self._ensure_tensor(dim))
     
     def is_close(self, b: TensorLike) -> Tensor:
+        """Return 1 if all values are close"""
         return IsClose.apply(self, self._ensure_tensor(b))
     
     def sigmoid(self) -> Tensor:
+        """Return sigmoid of this tensor"""
         return Sigmoid.apply(self)
 
     def relu(self) -> Tensor:
+        """Return relu of this tensor"""
         return ReLU.apply(self)
     
     def log(self) -> Tensor:
+        """Return log of this tensor"""
         return Log.apply(self)
     
     def exp(self) -> Tensor:
+        """Return exp of this tensor"""
         return Exp.apply(self)
     
     def sum(self, dim: TensorLike = None) -> Tensor:
+        """Sum along a given dimension"""
         if dim is None:
             return Sum.apply(self)
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
     
     def mean(self, dim: TensorLike = None) -> Tensor:
+        """Mean along a given dimension"""
         if dim is not None:
-            dim = self._ensure_tensor(dim)
-        self.zero_grad_()
-        return Sum.apply(self, dim)/self.shape[dim]
+            self.zero_grad_()
+            return Sum.apply(self, self._ensure_tensor(dim))/float(self.shape[dim])
+        else:
+            return Sum.apply(self)/float(self.size)
     
-    def permute(self, dim: TensorLike) -> Tensor:
-        if dim is not None:
-            dim = self._ensure_tensor(dim)
+    def permute(self, *dim: TensorLike) -> Tensor:
+        """Permute dimensions"""
+        dim = self.make(dim, (len(dim),), backend=self.backend)
         self.zero_grad_()
         return Permute.apply(self, dim)
     
     def view(self, shape: TensorLike) -> Tensor:
+        """Reshape the tensor"""
         shape = self._ensure_tensor(shape)
         self.zero_grad_()
         return View.apply(self, shape)

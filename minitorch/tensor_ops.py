@@ -334,34 +334,27 @@ def tensor_zip(
         # TODO: Implement for Task 2.3.
         # Compute the size of the `out` tensor (total number of elements)
         out_size = out.size
-        # for dim in out_shape:
-        #     out_size *= dim
 
         # Initialize the out_index and in_index arrays
         out_index = [0] * len(out_shape)
         a_index = [0] * len(a_shape)
         b_index = [0] * len(b_shape)
 
-        # print("zip test: storage", out, a_storage, b_storage)
         # Iterate over all positions in the `out` tensor
         for i in range(out_size):
-            # print("i:", i)
             # Convert ordinal (linear position) to the multidimensional `out_index`
             to_index(i, out_shape, out_index)
-            # print("out_index:", out_index, "out_shape:", out_shape)
+
             # Broadcast `out_index` to `a/b_index`
             broadcast_index(out_index, out_shape, a_shape, a_index)
             broadcast_index(out_index, out_shape, b_shape, b_index)
-            # print("a_index:", a_index, "a_shape:", a_shape)
-            # print("b_index:", b_index, "b_shape:", b_shape)
+            
             # Convert indices to positions in the respective storage arrays
             out_pos = index_to_position(out_index, out_strides)
             a_pos = index_to_position(a_index, a_strides)
             b_pos = index_to_position(b_index, b_strides)
-            # print("out_pos:", out_pos, "a_pos:", a_pos, "b_pos:", b_pos)
 
             # Apply the function and store the result in the `out` array
-            # print("zip test:", i, out_pos, a_pos, b_pos, out[out_pos], a_storage[a_pos], b_storage[b_pos])
             out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip

@@ -138,7 +138,7 @@ class Sigmoid(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Sigmoid backward"""
         (out,) = ctx.saved_values
-        return out*(1.0-out)*grad_output
+        return out*((zeros(out.shape)+1.0)-out)*grad_output
     
 
 class ReLU(Function):
@@ -166,26 +166,28 @@ class Log(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Log backward"""
         (t1,) = ctx.saved_values
-        return grad_output.f.log_back(t1, grad_output)
+        return grad_output.f.log_back_zip(t1, grad_output)
     
 
 class Exp(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
         """Exp Forward"""
-        ctx.save_for_backward(t1)
-        return t1.f.exp_map(t1)
+        out = t1.f.exp_map(t1)
+        ctx.save_for_backward(out)
+        return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Exp backward"""
-        (t1,) = ctx.saved_values
-        return grad_output.f.exp_back(t1, grad_output)
+        (out,) = ctx.saved_values
+        return out * grad_output
     
 class Sum(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
         """Sum Forward"""
+        ctx.save_for_backward(a.shape, dim)
         if dim is not None:
             return a.f.add_reduce(a, int(dim.item()))
         else:
@@ -194,7 +196,12 @@ class Sum(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Sum backward"""
-        return grad_output, 0.0
+        a_shape, dim = ctx.saved_values
+        out = grad_output * (zeros(a_shape) + 1)
+        if dim is not None:
+            return out, 0.0
+        else:
+            return out
     
 class LT(Function):
     @staticmethod
@@ -226,16 +233,25 @@ class IsClose(Function):
 
 class Permute(Function):
     @staticmethod
-    def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Tensor) -> Tensor:
         """Permute function"""
-        ctx.save_for_backward(order)
-        return a.f.permute(a, order)
+        dim = dim.to_numpy()
+        order = [int(dim[i]) for i in range(len(dim))]
+        out = a._new(a._tensor.permute(*order))
+        ctx.save_for_backward(out, *order)
+        return out
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Permute backward"""
-        (order,) = ctx.saved_values
-        return grad_output.f.permute_back(grad_output, order), 0.0
+        # (a, ) = ctx.saved_values
+        (out, *order,) = ctx.saved_values
+        # Inverse of the permutation
+        inv_order = [0] * len(order)
+        for i, d in enumerate(order):
+            inv_order[int(d)] = i
+        out = out._new(grad_output._tensor.permute(*inv_order))
+        return out, 0.0
 
 class View(Function):
     @staticmethod

@@ -99,17 +99,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     """Send `deriv` back through the graph to accumulate derivatives."""
     # TODO: Implement for Task 1.4.
     sorted_vars = topological_sort(variable)
-    derivatives = {variable.unique_id: deriv}
+    derivatives = {}
+    derivatives[variable.unique_id] = deriv
 
     for var in sorted_vars:
-        d = derivatives.get(var.unique_id, 0)
+        d = derivatives[var.unique_id]
         if var.is_leaf():
             var.accumulate_derivative(d)
         else:
             for parent, grad in var.chain_rule(d):
                 if parent.is_constant():
                     continue
-                derivatives.setdefault(parent.unique_id, 0)
+                derivatives.setdefault(parent.unique_id, 0.0)
                 derivatives[parent.unique_id] = derivatives[parent.unique_id] + grad
 
 
