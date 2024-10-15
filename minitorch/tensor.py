@@ -30,7 +30,6 @@ from .tensor_functions import (
     Sigmoid,
     Sum,
     View,
-    tensor,
 )
 
 if TYPE_CHECKING:
@@ -197,6 +196,7 @@ class Tensor:
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
         """Produce a zero tensor of size `shape`."""
+
         def zero(shape: UserShape) -> Tensor:
             return Tensor.make(
                 [0.0] * int(operators.prod(shape)), shape, backend=self.backend
@@ -296,50 +296,50 @@ class Tensor:
     def size(self) -> int:
         """Returns size of the tensor"""
         return self._tensor.size
-    
+
     @property
     def dims(self) -> int:
         """Returns number of dimensions of the tensor"""
         return len(self.shape)
-    
+
     def __add__(self, b: TensorLike) -> Tensor:
         return Add.apply(self, self._ensure_tensor(b))
 
     def __sub__(self, b: TensorLike) -> Tensor:
-        return Add.apply(self, - self._ensure_tensor(b))
+        return Add.apply(self, -self._ensure_tensor(b))
 
     def __mul__(self, b: TensorLike) -> Tensor:
         return Mul.apply(self, self._ensure_tensor(b))
-    
+
     def __lt__(self, b: TensorLike) -> Tensor:
         return LT.apply(self, self._ensure_tensor(b))
-    
+
     def __eq__(self, b: TensorLike) -> Tensor:
         return EQ.apply(self, self._ensure_tensor(b))
-    
+
     def __gt__(self, b: TensorLike) -> Tensor:
         return LT.apply(self._ensure_tensor(b), self)
-    
+
     def __neg__(self) -> Tensor:
         return Neg.apply(self)
-    
+
     def __radd__(self, b: TensorLike) -> Tensor:
         return Add.apply(self._ensure_tensor(b), self)
 
     def __rmul__(self, b: TensorLike) -> Tensor:
         return Mul.apply(self._ensure_tensor(b), self)
-    
+
     def all(self, dim: TensorLike = None) -> Tensor:
         """Return 1 if all are true along a given dimension"""
         if dim is None:
             return All.apply(self)
         else:
             return All.apply(self, self._ensure_tensor(dim))
-    
+
     def is_close(self, b: TensorLike) -> Tensor:
         """Return 1 if all values are close"""
         return IsClose.apply(self, self._ensure_tensor(b))
-    
+
     def sigmoid(self) -> Tensor:
         """Return sigmoid of this tensor"""
         return Sigmoid.apply(self)
@@ -347,42 +347,39 @@ class Tensor:
     def relu(self) -> Tensor:
         """Return relu of this tensor"""
         return ReLU.apply(self)
-    
+
     def log(self) -> Tensor:
         """Return log of this tensor"""
         return Log.apply(self)
-    
+
     def exp(self) -> Tensor:
         """Return exp of this tensor"""
         return Exp.apply(self)
-    
+
     def sum(self, dim: TensorLike = None) -> Tensor:
         """Sum along a given dimension"""
         if dim is None:
             return Sum.apply(self)
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
-    
+
     def mean(self, dim: TensorLike = None) -> Tensor:
         """Mean along a given dimension"""
         if dim is not None:
-            self.zero_grad_()
-            return Sum.apply(self, self._ensure_tensor(dim))/float(self.shape[dim])
+            return Sum.apply(self, self._ensure_tensor(dim)) / float(self.shape[dim])
         else:
-            return Sum.apply(self)/float(self.size)
-    
+            return Sum.apply(self) / float(self.size)
+
     def permute(self, *dim: TensorLike) -> Tensor:
         """Permute dimensions"""
         dim = self.make(dim, (len(dim),), backend=self.backend)
-        self.zero_grad_()
         return Permute.apply(self, dim)
-    
-    def view(self, shape: TensorLike) -> Tensor:
+
+    def view(self, *shape: TensorLike) -> Tensor:
         """Reshape the tensor"""
-        shape = self._ensure_tensor(shape)
-        self.zero_grad_()
+        shape = self.make(shape, (len(shape),), backend=self.backend)
         return View.apply(self, shape)
-    
+
     def zero_grad_(self) -> None:
         """Set the gradient of the variable to zero."""
         self.grad = None

@@ -123,8 +123,8 @@ class Mul(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Multiplication backward"""
         (t1, t2) = ctx.saved_values
-        return grad_output*t2, grad_output*t1
-    
+        return grad_output * t2, grad_output * t1
+
 
 class Sigmoid(Function):
     @staticmethod
@@ -138,8 +138,8 @@ class Sigmoid(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Sigmoid backward"""
         (out,) = ctx.saved_values
-        return out*((zeros(out.shape)+1.0)-out)*grad_output
-    
+        return out * ((zeros(out.shape) + 1.0) - out) * grad_output
+
 
 class ReLU(Function):
     @staticmethod
@@ -153,7 +153,7 @@ class ReLU(Function):
         """ReLU backward"""
         (t1,) = ctx.saved_values
         return grad_output.f.relu_back_zip(t1, grad_output)
-    
+
 
 class Log(Function):
     @staticmethod
@@ -167,7 +167,7 @@ class Log(Function):
         """Log backward"""
         (t1,) = ctx.saved_values
         return grad_output.f.log_back_zip(t1, grad_output)
-    
+
 
 class Exp(Function):
     @staticmethod
@@ -182,7 +182,8 @@ class Exp(Function):
         """Exp backward"""
         (out,) = ctx.saved_values
         return out * grad_output
-    
+
+
 class Sum(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
@@ -202,17 +203,19 @@ class Sum(Function):
             return out, 0.0
         else:
             return out
-    
+
+
 class LT(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Less than function $f(x, y) = x < y$"""
         return a.f.lt_zip(a, b)
-    
+
     @staticmethod
     def backward(ctx: Context, d_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Less than derivative $f(x, y) = 0 if x < y, 1 otherwise$"""
         return 0.0, 0.0
+
 
 class EQ(Function):
     @staticmethod
@@ -224,12 +227,14 @@ class EQ(Function):
     def backward(ctx: Context, d_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Equal derivative $f(x, y) = 0 if x == y, 1 otherwise$"""
         return 0.0, 0.0
-    
+
+
 class IsClose(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
         """Equal function $f(x, y) = x == y$"""
         return a.f.is_close_zip(a, b)
+
 
 class Permute(Function):
     @staticmethod
@@ -245,13 +250,17 @@ class Permute(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         """Permute backward"""
         # (a, ) = ctx.saved_values
-        (out, *order,) = ctx.saved_values
+        (
+            out,
+            *order,
+        ) = ctx.saved_values
         # Inverse of the permutation
         inv_order = [0] * len(order)
         for i, d in enumerate(order):
             inv_order[int(d)] = i
         out = out._new(grad_output._tensor.permute(*inv_order))
         return out, 0.0
+
 
 class View(Function):
     @staticmethod
@@ -419,6 +428,7 @@ def tensor(
 def grad_central_difference(
     f: Any, *vals: Tensor, arg: int = 0, epsilon: float = 1e-6, ind: UserIndex
 ) -> float:
+    """Compute the gradient using the central difference formula."""
     x = vals[arg]
     up = zeros(x.shape)
     up[ind] = epsilon

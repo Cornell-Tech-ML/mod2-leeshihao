@@ -37,10 +37,12 @@ def index_to_position(index: Index, strides: Strides) -> int:
     storage based on strides.
 
     Args:
+    ----
         index : index tuple of ints
         strides : tensor strides
 
     Returns:
+    -------
         Position in storage
 
     """
@@ -58,6 +60,7 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     may not be the inverse of `index_to_position`.
 
     Args:
+    ----
         ordinal: ordinal position to convert.
         shape : tensor shape.
         out_index : return index corresponding to position.
@@ -81,41 +84,48 @@ def broadcast_index(
     removed.
 
     Args:
+    ----
         big_index : multidimensional index of bigger tensor
         big_shape : tensor shape of bigger tensor
         shape : tensor shape of smaller tensor
         out_index : multidimensional index of smaller tensor
 
     Returns:
+    -------
         None
 
     """
     # TODO: Implement for Task 2.2.
     # Ensure shape alignment by padding shape with leading ones
     dim_offset = len(big_shape) - len(shape)
-    padded_shape = np.concatenate([np.ones(dim_offset, dtype=int), shape])  # Adjust shape with leading ones
+    padded_shape = np.concatenate(
+        [np.ones(dim_offset, dtype=int), shape]
+    )  # Adjust shape with leading ones
 
     # Iterate over each dimension
     for i in range(dim_offset, len(big_shape)):
         if padded_shape[i] == 1:
             # If the current smaller shape dimension is 1, we set out_index to 0
-            out_index[i-dim_offset] = 0
+            out_index[i - dim_offset] = 0
         else:
             # Otherwise, copy the corresponding index from the big_index
-            out_index[i-dim_offset] = big_index[i]
+            out_index[i - dim_offset] = big_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     """Broadcast two shapes to create a new union shape.
 
     Args:
+    ----
         shape1 : first shape
         shape2 : second shape
 
     Returns:
+    -------
         broadcasted shape
 
     Raises:
+    ------
         IndexingError : if cannot broadcast
 
     """
@@ -186,7 +196,8 @@ class TensorData:
     def is_contiguous(self) -> bool:
         """Check that the layout is contiguous, i.e. outer dimensions have bigger strides than inner dimensions.
 
-        Returns:
+        Returns
+        -------
             bool : True if contiguous
 
         """
@@ -255,9 +266,11 @@ class TensorData:
         """Permute the dimensions of the tensor.
 
         Args:
+        ----
             *order: a permutation of the dimensions
 
         Returns:
+        -------
             New `TensorData` with the same storage and a new dimension order.
 
         """
