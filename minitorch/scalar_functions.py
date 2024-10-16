@@ -38,6 +38,10 @@ class ScalarFunction:
 
     @classmethod
     def apply(cls, *vals: ScalarLike) -> Scalar:
+        """Calls the function with the variables 'vals' and returns the
+        value computed by the function.
+
+        """
         raw_vals = []
         scalars = []
         for v in vals:
@@ -66,10 +70,12 @@ class Add(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
+        """Addition function $f(x, y) = x + y$"""
         return a + b
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
+        """Addition derivative $f(x, y) = 1$"""
         return d_output, d_output
 
 
@@ -78,15 +84,136 @@ class Log(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
+        """Log function $f(x) = log(x)$"""
         ctx.save_for_backward(a)
         return operators.log(a)
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
+        """Log derivative $f(x) = 1/x$"""
         (a,) = ctx.saved_values
         return operators.log_back(a, d_output)
 
 
-# To implement.
+# Task 1.2
+class Mul(ScalarFunction):
+    """Multiplication function $f(x, y) = x * y$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float, b: float) -> float:
+        """Multiplication function $f(x, y) = x * y$"""
+        ctx.save_for_backward(a, b)
+        return a * b
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> Tuple[float, ...]:
+        """Multiplication derivative $f(x, y) = y$"""
+        (a, b) = ctx.saved_values
+        return b * d_output, a * d_output
 
 
+class Inv(ScalarFunction):
+    """Inverse function $f(x) = 1/x$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float) -> float:
+        """Inverse function $f(x) = 1/x$"""
+        ctx.save_for_backward(a)
+        return operators.inv(a)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> float:
+        """Inverse derivative $f(x) = -1/x^2$"""
+        (a,) = ctx.saved_values
+        return operators.inv_back(a, d_output)
+
+
+class Neg(ScalarFunction):
+    """Negation function $f(x) = -x$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float) -> float:
+        """Negation function $f(x) = -x$"""
+        return float(operators.neg(a))
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> float:
+        """Negation derivative $f(x) = -1$"""
+        return -d_output
+
+
+class Sigmoid(ScalarFunction):
+    """Sigmoid function $f(x) = 1/(1+exp(-x))$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float) -> float:
+        """Sigmoid function $f(x) = 1/(1+exp(-x))$"""
+        out = operators.sigmoid(a)
+        ctx.save_for_backward(out)
+        return out
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> float:
+        """Sigmoid derivative $f(x) = f(x)(1-f(x))$"""
+        sigma: float = ctx.saved_values[0]
+        return sigma * (1.0 - sigma) * d_output
+
+
+class ReLU(ScalarFunction):
+    """ReLU function $f(x) = max(0, x)$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float) -> float:
+        """ReLU function $f(x) = max(0, x)$"""
+        ctx.save_for_backward(a)
+        return operators.relu(a)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> float:
+        """ReLU derivative $f(x) = 1 if x > 0, 0 otherwise$"""
+        (a,) = ctx.saved_values
+        return operators.relu_back(a, d_output)
+
+
+class Exp(ScalarFunction):
+    """Exponential function $f(x) = exp(x)$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float) -> float:
+        """Exponential function $f(x) = exp(x)$"""
+        ctx.save_for_backward(a)
+        return operators.exp(a)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> float:
+        """Exponential derivative $f(x) = exp(x)$"""
+        (a,) = ctx.saved_values
+        return operators.exp(a) * d_output
+
+
+class LT(ScalarFunction):
+    """Less than function $f(x, y) = x < y$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float, b: float) -> float:
+        """Less than function $f(x, y) = x < y$"""
+        return operators.lt(a, b)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> tuple[float, float]:
+        """Less than derivative $f(x, y) = 0 if x < y, 1 otherwise$"""
+        return 0.0, 0.0
+
+
+class EQ(ScalarFunction):
+    """Equal function $f(x, y) = x == y$"""
+
+    @staticmethod
+    def forward(ctx: Context, a: float, b: float) -> float:
+        """Equal function $f(x, y) = x == y$"""
+        return operators.eq(a, b)
+
+    @staticmethod
+    def backward(ctx: Context, d_output: float) -> tuple[float, float]:
+        """Equal derivative $f(x, y) = 0 if x == y, 1 otherwise$"""
+        return 0.0, 0.0

@@ -5,8 +5,9 @@ from typing import List, Tuple
 
 
 def make_pts(N: int) -> List[Tuple[float, float]]:
+    """Generates N random points in the unit square."""
     X = []
-    for i in range(N):
+    for _ in range(N):
         x_1 = random.random()
         x_2 = random.random()
         X.append((x_1, x_2))
@@ -21,6 +22,7 @@ class Graph:
 
 
 def simple(N: int) -> Graph:
+    """Generates N random points and labels them as 1 if x_1 < 0.5, 0 otherwise (horizontal line)."""
     X = make_pts(N)
     y = []
     for x_1, x_2 in X:
@@ -30,6 +32,7 @@ def simple(N: int) -> Graph:
 
 
 def diag(N: int) -> Graph:
+    """Generates N random points and labels them as 1 if x_1 + x_2 < 0.5, 0 otherwise (diagonal line)."""
     X = make_pts(N)
     y = []
     for x_1, x_2 in X:
@@ -39,6 +42,7 @@ def diag(N: int) -> Graph:
 
 
 def split(N: int) -> Graph:
+    """Generates N random points and labels them as 1 if x_1 < 0.2 or x_1 > 0.8, 0 otherwise (horizontal split)."""
     X = make_pts(N)
     y = []
     for x_1, x_2 in X:
@@ -48,25 +52,29 @@ def split(N: int) -> Graph:
 
 
 def xor(N: int) -> Graph:
+    """Generates N random points and labels them as 1 if x_1 and x_2 are on different sides of the line x_1 = 0.5 (XOR pattern)."""
     X = make_pts(N)
     y = []
     for x_1, x_2 in X:
-        y1 = 1 if ((x_1 < 0.5 and x_2 > 0.5) or (x_1 > 0.5 and x_2 < 0.5)) else 0
+        y1 = 1 if x_1 < 0.5 and x_2 > 0.5 or x_1 > 0.5 and x_2 < 0.5 else 0
         y.append(y1)
     return Graph(N, X, y)
 
 
 def circle(N: int) -> Graph:
+    """Generates N random points and labels them as 1 if they are outside a circle centered in the unit square, 0 otherwise."""
     X = make_pts(N)
     y = []
     for x_1, x_2 in X:
-        x1, x2 = (x_1 - 0.5, x_2 - 0.5)
+        x1, x2 = x_1 - 0.5, x_2 - 0.5
         y1 = 1 if x1 * x1 + x2 * x2 > 0.1 else 0
         y.append(y1)
     return Graph(N, X, y)
 
 
 def spiral(N: int) -> Graph:
+    """Generates N random points along a spiral, and labels them as 1 if they are on the outer side of the spiral, 0 otherwise."""
+
     def x(t: float) -> float:
         return t * math.cos(t) / 20.0
 
