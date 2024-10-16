@@ -41,7 +41,7 @@ class Linear(minitorch.Module):
         t = t.sum(1).view(batch_size, self.out_size)
         b = self.bias.value.view(1, self.out_size)
         return t + b
-    
+
 def default_log_fn(epoch, total_loss, correct, losses):
     print("Epoch ", epoch, " loss ", total_loss, "correct", correct)
 
