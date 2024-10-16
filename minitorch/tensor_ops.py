@@ -11,6 +11,7 @@ from .tensor_data import (
     shape_broadcast,
     to_index,
 )
+import numpy as np
 
 if TYPE_CHECKING:
     from .tensor import Tensor
@@ -281,8 +282,8 @@ def tensor_map(
         # Initialize the out_index and in_index arrays
         out_index: OutIndex
         in_index: OutIndex
-        out_index = [0] * len(out_shape)
-        in_index = [0] * len(in_shape)
+        out_index = np.zeros(len(out_shape), dtype=int)
+        in_index = np.zeros(len(in_shape), dtype=int)
 
         # Iterate over all positions in the `out` tensor
         for ordinal in range(out_size):
@@ -348,9 +349,12 @@ def tensor_zip(
         out_size = out.size
 
         # Initialize the out_index and in_index arrays
-        out_index = [0] * len(out_shape)
-        a_index = [0] * len(a_shape)
-        b_index = [0] * len(b_shape)
+        out_index: OutIndex
+        a_index: OutIndex
+        b_index: OutIndex
+        out_index = np.zeros(len(out_shape), dtype=int)
+        a_index = np.zeros(len(a_shape), dtype=int)
+        b_index = np.zeros(len(b_shape), dtype=int)
 
         # Iterate over all positions in the `out` tensor
         for i in range(out_size):
@@ -402,12 +406,12 @@ def tensor_reduce(
         # TODO: Implement for Task 2.3.
         # Compute the size of the `out` tensor (total number of elements)
         out_size = out.size
-        # for dim in out_shape:
-        #     out_size *= dim
 
         # Initialize the out_index and in_index arrays
-        out_index = [0] * len(out_shape)
-        a_index = [0] * len(a_shape)
+        out_index: OutIndex
+        a_index: OutIndex
+        out_index = np.zeros(len(out_shape), dtype=int)
+        a_index = np.zeros(len(a_shape), dtype=int)
 
         # Iterate over all positions in the `out` tensor
         for ordinal in range(out_size):
