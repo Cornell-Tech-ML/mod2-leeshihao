@@ -329,7 +329,7 @@ class Tensor:
     def __rmul__(self, b: TensorLike) -> Tensor:
         return Mul.apply(self._ensure_tensor(b), self)
 
-    def all(self, dim: TensorLike = None) -> Tensor:
+    def all(self, dim: Optional[TensorLike] = None) -> Tensor:
         """Return 1 if all are true along a given dimension"""
         if dim is None:
             return All.apply(self)
@@ -356,29 +356,40 @@ class Tensor:
         """Return exp of this tensor"""
         return Exp.apply(self)
 
-    def sum(self, dim: TensorLike = None) -> Tensor:
+    def sum(self, dim: Optional[TensorLike] = None) -> Tensor:
         """Sum along a given dimension"""
         if dim is None:
             return Sum.apply(self)
         else:
             return Sum.apply(self, self._ensure_tensor(dim))
 
-    def mean(self, dim: TensorLike = None) -> Tensor:
+    def mean(self, dim: Optional[TensorLike] = None) -> Tensor:
         """Mean along a given dimension"""
         if dim is not None:
-            return Sum.apply(self, self._ensure_tensor(dim)) / float(self.shape[dim])
+            if isinstance(dim, (int, float)):
+                return Sum.apply(self, self._ensure_tensor(dim)) / float(
+                    self.shape[int(dim)]
+                )
+            else:
+                return Sum.apply(self, self._ensure_tensor(dim)) / float(
+                    self.shape[int(dim.item())]
+                )
         else:
             return Sum.apply(self) / float(self.size)
 
     def permute(self, *dim: TensorLike) -> Tensor:
         """Permute dimensions"""
-        dim = self.make(dim, (len(dim),), backend=self.backend)
-        return Permute.apply(self, dim)
+        dim_list = [float(d.item()) if isinstance(d, Tensor) else float(d) for d in dim]
+        t_dim = self.make(dim_list, (len(dim),), backend=self.backend)
+        return Permute.apply(self, t_dim)
 
     def view(self, *shape: TensorLike) -> Tensor:
         """Reshape the tensor"""
-        shape = self.make(shape, (len(shape),), backend=self.backend)
-        return View.apply(self, shape)
+        shape_list = [
+            float(s.item()) if isinstance(s, Tensor) else float(s) for s in shape
+        ]
+        t_shape = self.make(shape_list, (len(shape),), backend=self.backend)
+        return View.apply(self, t_shape)
 
     def zero_grad_(self) -> None:
         """Set the gradient of the variable to zero."""

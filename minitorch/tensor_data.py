@@ -132,8 +132,8 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     # TODO: Implement for Task 2.2.
     # Ensure both shapes are the same length by padding with leading ones
     max_len = max(len(shape1), len(shape2))
-    shape1 = (1,) * (max_len - len(shape1)) + shape1
-    shape2 = (1,) * (max_len - len(shape2)) + shape2
+    shape1 = (1,) * (max_len - len(shape1)) + tuple(shape1)
+    shape2 = (1,) * (max_len - len(shape2)) + tuple(shape2)
 
     # Broadcast the shapes
     broadcast_shape = []

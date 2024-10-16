@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 
@@ -103,7 +103,7 @@ class Add(Function):
 
 class All(Function):
     @staticmethod
-    def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Optional[Tensor] = None) -> Tensor:
         """Return 1 if all are true"""
         if dim is not None:
             return a.f.mul_reduce(a, int(dim.item()))
@@ -186,7 +186,7 @@ class Exp(Function):
 
 class Sum(Function):
     @staticmethod
-    def forward(ctx: Context, a: Tensor, dim: Tensor = None) -> Tensor:
+    def forward(ctx: Context, a: Tensor, dim: Optional[Tensor] = None) -> Tensor:
         """Sum Forward"""
         ctx.save_for_backward(a.shape, dim)
         if dim is not None:
@@ -195,12 +195,14 @@ class Sum(Function):
             return a.f.add_reduce(a.contiguous().view(int(operators.prod(a.shape))), 0)
 
     @staticmethod
-    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+    def backward(
+        ctx: Context, grad_output: Tensor
+    ) -> Union[Tuple[Tensor, Tensor], Tensor]:
         """Sum backward"""
         a_shape, dim = ctx.saved_values
         out = grad_output * (zeros(a_shape) + 1)
         if dim is not None:
-            return out, 0.0
+            return out, grad_output.zeros((1,))
         else:
             return out
 
@@ -214,7 +216,7 @@ class LT(Function):
     @staticmethod
     def backward(ctx: Context, d_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Less than derivative $f(x, y) = 0 if x < y, 1 otherwise$"""
-        return 0.0, 0.0
+        return d_output.zeros((1,)), d_output.zeros((1,))
 
 
 class EQ(Function):
@@ -226,7 +228,7 @@ class EQ(Function):
     @staticmethod
     def backward(ctx: Context, d_output: Tensor) -> Tuple[Tensor, Tensor]:
         """Equal derivative $f(x, y) = 0 if x == y, 1 otherwise$"""
-        return 0.0, 0.0
+        return d_output.zeros((1,)), d_output.zeros((1,))
 
 
 class IsClose(Function):
@@ -240,10 +242,10 @@ class Permute(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, dim: Tensor) -> Tensor:
         """Permute function"""
-        dim = dim.to_numpy()
-        order = [int(dim[i]) for i in range(len(dim))]
-        out = a._new(a._tensor.permute(*order))
-        ctx.save_for_backward(out, *order)
+        order = dim.to_numpy()
+        new_order = [int(order[i]) for i in range(len(order))]
+        out = a._new(a._tensor.permute(*new_order))
+        ctx.save_for_backward(out, *new_order)
         return out
 
     @staticmethod
